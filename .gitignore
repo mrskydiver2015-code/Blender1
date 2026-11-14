@@ -1,0 +1,14 @@
+node_modules/
+dist/
+playwright-report/
+test-results/
+tests/artifacts/
+.vercel/
+.env
+.env.*
+!.env.example
+Microsoft/
+aegis-grid-production.zip
+aegis-grid-source.bundle
+aegis-grid-live.jpg
+aegis-grid-release.zip

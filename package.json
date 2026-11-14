@@ -1,0 +1,19 @@
+{
+  "name": "aegis-grid",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test src/engine/engine.test.js && playwright test --config tests/qa.config.js"
+  },
+  "dependencies": {
+    "three": "^0.183.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.0",
+    "vite": "^8.0.0"
+  }
+}

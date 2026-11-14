@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "units": "meters",
+  "coordinateSystem": "glTF Y-up, dimensions ordered [width X, height Y, depth Z]",
+  "origin": [0, 0, 0],
+  "originPlacement": "Base center. Geometry spans from Y=0 to the specified height.",
+  "maximumTrianglesPerModel": 800,
+  "meshPrimitivesPerModel": 1,
+  "materialsPerModel": 1,
+  "colorEncoding": "sRGB hex palette, baked into vertex colors",
+  "models": {
+    "turret_basic": {
+      "file": "turret_basic.glb",
+      "dimensions": [0.78, 0.95, 0.78],
+      "maxTriangles": 640,
+      "colors": { "body": "#56C9D8", "base": "#23394E", "emitter": "#EAFBFF" }
+    },
+    "enemy_grunt": {
+      "file": "enemy_grunt.glb",
+      "dimensions": [0.50, 0.56, 0.50],
+      "maxTriangles": 480,
+      "colors": { "armor": "#F18360", "joints": "#482E38", "visor": "#FFE4A5" }
+    },
+    "turret_rail": {
+      "file": "turret_rail.glb",
+      "dimensions": [0.78, 1.10, 0.98],
+      "maxTriangles": 640,
+      "colors": { "body": "#B79CFF", "base": "#23394E", "emitter": "#F3EDFF" }
+    },
+    "enemy_runner": {
+      "file": "enemy_runner.glb",
+      "dimensions": [0.42, 0.48, 0.60],
+      "maxTriangles": 480,
+      "colors": { "armor": "#FFC66D", "joints": "#482E38", "visor": "#FFF4CF" }
+    },
+    "tile_path": {
+      "file": "tile_path.glb",
+      "dimensions": [0.98, 0.14, 0.98],
+      "maxTriangles": 120,
+      "colors": { "surface": "#394F62", "edge": "#243649", "marking": "#7D9AA5" }
+    }
+  }
+}
