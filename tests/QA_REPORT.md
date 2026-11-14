@@ -1,4 +1,4 @@
-# Aegis Grid QA - Iteration 2
+﻿# Aegis Grid QA - Iteration 2
 
 All authored changes are under `tests/`. Engine, renderer, audio sources, root
 configuration, package scripts, and production GLBs were not edited.

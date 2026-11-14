@@ -1,4 +1,4 @@
-// All sound stays in the browser layer; no audio work occurs inside engine steps.
+﻿// All sound stays in the browser layer; no audio work occurs inside engine steps.
 const cues = {
   build: { notes: [440, 660] },
   reject: { notes: [180, 140] },
