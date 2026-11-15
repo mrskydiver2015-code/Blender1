@@ -11,6 +11,10 @@ npm run dev
 # Open http://localhost:5173/chronograph/
 npm run build
 npm run test:chronograph
+node --test src/chronograph/*.test.js
+# Safari-engine compatibility (install once):
+npx playwright install webkit
+node tests/chronograph-webkit.mjs
 ```
 
 `predev` and `prebuild` copy the Three.js version-matched Draco WASM decoder
@@ -41,14 +45,51 @@ Set `CHRONOGRAPH_BASE_URL` to test a deployed origin instead. Edge is the defaul
 - GPU submissions are capped at 60Hz, including on 120Hz ProMotion displays.
 - No shadows, post-processing or automatic rotation. Draco uses one worker on
   touch devices and two on desktop; workers are disposed after loading.
-- Both desktop and mobile use a sharp, thin AR-coated crystal preview instead of
-  screen-space transmission blur: environment intensity 0.36, specular intensity
-  0.16 and opacity 0.035. The original sapphire material remains in the source GLB.
-  Off-axis key lighting and 40-degree studio environment rotation protect the dial.
+- Both desktop and mobile use angle-dependent AR crystal. Alignment with the
+  authored dial normal sets opacity, environment and specular reflection to zero.
+  A smooth grazing-angle ramp reaches at most 0.055 opacity, 0.36 environment and
+  0.16 specular intensity. No screen-space transmission blur is used. The original
+  sapphire material remains in the GLB. Off-axis lighting protects the dial.
 - The model has 357,388 triangles, 27 mesh parts, 11 materials and ten named
   mechanical pivots. Static parts remain consolidated by material. Software
   browser tests verify behavior, not physical iPhone/iPad FPS or thermal limits.
   Sustained 60fps and thermal behavior require testing on those devices.
+
+## Collection architecture and inspection
+
+`src/chronograph/watches-catalog.js` owns the asset URLs, editorial content, specs,
+camera presets/bounds, dial normal, material selectors, light profiles, audio and
+feature configuration. Three house records each have Flagship, Mid-Tier and Entry
+slots. Watch 01 is available; eight slots are explicitly reserved, with House II
+and III awaiting brand curation. There are no fabricated models or brand claims.
+The collection dialog is keyboard accessible; `?watch=marine-01` is the current
+deep link. Unknown and reserved IDs safely fall back to Watch 01. New available
+records use the same page through URL navigation without duplicated markup.
+
+`optics.js` handles AR response, underside stand clipping and emissive coatings.
+Orbit azimuth is unrestricted, with polar bounds 0.08–0.78π. Below the dial, the
+basalt disappears and a world-space plane cuts away only the low stand geometry,
+revealing the case underside. Returning above restores the complete display.
+
+The 3× optical loupe changes camera projection, preserving physical distance and
+the locked dial anchor. Dragging scans the enlarged geometry; no extra renderer,
+render target, or full-screen effects are needed. Night lume illuminates authored
+indices plus local hand coatings, with low studio fill for case readability.
+
+`escapement-audio.js` synthesizes two alternating 18ms micro-clicks in memory.
+An opt-in AudioContext schedules 8 beats/second against wall-clock 125ms boundaries,
+matching the second hand. No MP3, remote media or audio dependency is downloaded.
+Pause, still-image view, hidden tabs, collection browsing and page exit cancel
+pending audio sources. Resuming movement catches up; it never replays missed ticks.
+
+Tests cover front/grazing crystal response, under-view restoration, loupe, lume,
+the nine-slot catalog, audio scheduling/muting, fixed targets and responsive HUD.
+WebKit checks use the Safari engine on Windows with an iPhone viewport; they do
+not establish physical iOS performance, audio output level or thermal behavior.
+On PATRIKS, the November 2026 WebKit run was blocked by Windows Application
+Control loading four bundled DLLs. Chromium desktop, touch phone/tablet and
+production route checks are verified; Safari-engine and physical-device checks
+remain outstanding. No system security settings were changed.
 
 ## Blender source scripts
 
