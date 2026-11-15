@@ -3,6 +3,11 @@ import { resolve } from 'node:path';
 
 export default defineConfig({
   publicDir: process.env.AEGIS_TEST_PUBLIC_DIR ?? 'public',
+  build: {
+    rollupOptions: {
+      input: { game: resolve('index.html'), chronograph: resolve('chronograph/index.html') },
+    },
+  },
   plugins: [{
     name: 'aegis-model-updates',
     hotUpdate({ file, server }) {

@@ -12,3 +12,18 @@ aegis-grid-production.zip
 aegis-grid-source.bundle
 aegis-grid-live.jpg
 aegis-grid-release.zip
+
+# Raw Blender sources and backups stay on PATRIKS.
+*.blend
+*.blend1
+*.blend[0-9]*
+*.blend@
+
+# Generated decoder copies, previews and local QA evidence.
+public/draco/
+artifacts/chronograph_test/*preview*.png
+artifacts/chronograph_test/*verified.png
+artifacts/chronograph_test/*.log
+artifacts/chronograph_test/qa/
+__pycache__/
+*.pyc

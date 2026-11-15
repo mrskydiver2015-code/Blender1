@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#10171b">
+    <meta name="description" content="Explore the PATRIKS marine chronograph in interactive 3D. Discover its exposed movement, sapphire crystal and architectural stone plinth.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2310171b'/%3E%3Cpath d='M16 5 24 16 16 27 8 16Z' fill='none' stroke='%23c9ad7c' stroke-width='2'/%3E%3C/svg%3E">
+    <title>PATRIKS — Marine Observatory</title>
+  </head>
+  <body>
+    <div class="experience">
+      <header class="masthead">
+        <a class="wordmark" href="/chronograph/" aria-label="PATRIKS Marine Observatory home"><span class="emblem" aria-hidden="true">◇</span> PATRIKS</a>
+        <span class="edition">MARINE OBSERVATORY <span>—</span> No. 001</span>
+      </header>
+      <main class="layout">
+        <section class="intro" aria-labelledby="title">
+          <p class="eyebrow"><span></span> THE OBJECT COLLECTION</p>
+          <h1 id="title">Time, <br>engineered.</h1>
+          <p class="description">A marine chronograph. <br>A closer look at mechanical precision.</p>
+          <div class="material-note"><span>01 / MATERIAL STUDY</span><p>Brushed steel. Champagne brass.<br>Sapphire over an exposed movement.</p></div>
+        </section>
+        <section class="stage" aria-label="Interactive chronograph preview" aria-describedby="gesture-help">
+          <div id="canvas-host"></div>
+          <img id="studio-image" alt="PATRIKS marine chronograph with a midnight-blue dial, exposed brass gears and sapphire crystal on a dark basalt plinth" width="1920" height="1080" hidden>
+          <div id="loading" class="loading" role="status"><span class="loading-orbit" aria-hidden="true"></span><span id="loading-label">Preparing your instrument…</span></div>
+          <p id="viewer-error" class="viewer-error" role="alert" hidden></p>
+          <span class="view-label" id="view-label">01 — THREE-QUARTER</span>
+          <p id="gesture-help" class="gesture-help"><span class="desktop-help">Drag to orbit · Scroll to zoom · Right-drag to pan</span><span class="touch-help">One finger to orbit · Two fingers to zoom & pan</span></p>
+        </section>
+      </main>
+      <nav class="toolbar" aria-label="Preview controls">
+        <div class="mode-switch" role="group" aria-label="Preview mode">
+          <button type="button" data-mode="model" aria-pressed="true"><span aria-hidden="true">◇</span> Live 3D</button>
+          <button type="button" data-mode="image" aria-pressed="false"><span aria-hidden="true">▧</span> Studio image</button>
+        </div>
+        <span class="divider" aria-hidden="true"></span>
+        <div class="camera-buttons" role="group" aria-label="Camera views">
+          <button type="button" data-camera="overview" aria-pressed="true">Overview</button>
+          <button type="button" data-camera="dial" aria-pressed="false">Dial</button>
+          <button type="button" data-camera="movement" aria-pressed="false">Movement</button>
+        </div>
+        <span class="divider" aria-hidden="true"></span>
+        <button type="button" id="lighting" aria-label="Switch to warm gallery lighting" aria-pressed="false"><span aria-hidden="true">☼</span> <span id="lighting-label">Studio</span></button>
+        <button type="button" id="reset" class="reset" aria-label="Reset camera"><span aria-hidden="true">↺</span></button>
+      </nav>
+      <footer class="folio"><span>DESIGNED TO BE OBSERVED.</span><span>EXPLORE EVERY ANGLE <span aria-hidden="true">↗</span></span></footer>
+      <noscript><p class="no-script">Enable JavaScript to explore the interactive instrument.</p></noscript>
+    </div>
+    <script type="module" src="/src/chronograph/viewer.js"></script>
+  </body>
+</html>

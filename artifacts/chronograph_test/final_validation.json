@@ -1,0 +1,62 @@
+{
+  "files": [
+    {
+      "name": "chronograph_scene.blend",
+      "path": "C:/AI-ProjectsH/Blender1/artifacts/chronograph_test/chronograph_scene.blend",
+      "bytes": 9747922,
+      "sha256": "04b271a35e8b69bc248826dee2f419dca97651b93a9ea375be07ddabc1f6f5c8"
+    },
+    {
+      "name": "chronograph_hero.png",
+      "path": "C:/AI-ProjectsH/Blender1/artifacts/chronograph_test/chronograph_hero.png",
+      "bytes": 2570913,
+      "sha256": "0260b4bf213ab8c11a751b2deb3d28fc32061926676afafc99509af18d2f62c1"
+    },
+    {
+      "name": "chronograph_web.glb",
+      "path": "C:/AI-ProjectsH/Blender1/artifacts/chronograph_test/chronograph_web.glb",
+      "bytes": 4731348,
+      "sha256": "8dfe590460aeea8c60687a150f3cb7cfd93c603e56c03b48d34dbcb36bec09f0"
+    }
+  ],
+  "png": {
+    "width": 1920,
+    "height": 1080
+  },
+  "glb": {
+    "version": 2,
+    "declaredLength": 4731348,
+    "actualLength": 4731348,
+    "scenes": 1,
+    "meshes": 11,
+    "triangles": 357388,
+    "dracoPrimitives": 11,
+    "embeddedImages": 6,
+    "externalURIs": 0,
+    "extensions": [
+      "KHR_draco_mesh_compression",
+      "KHR_materials_transmission",
+      "KHR_materials_ior"
+    ]
+  },
+  "browser": {
+    "ok": true,
+    "meshes": 11,
+    "triangles": 357388,
+    "drawCalls": 22,
+    "bounds": [
+      0.4150000214576721,
+      0.334126815199852,
+      0.24744999408721924
+    ],
+    "errors": []
+  },
+  "toolchain": [
+    "Bool Tool",
+    "LoopTools",
+    "Extra Mesh Objects",
+    "Node Wrangler",
+    "glTF 2.0 + Draco"
+  ],
+  "visualReview": "Final Cycles PNG inspected after framing, optical, movement aperture, lighting, and stone polish passes."
+}

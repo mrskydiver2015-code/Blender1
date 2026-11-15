@@ -1,0 +1,9 @@
+*.blend
+*.blend1
+*.blend[0-9]*
+*.blend@
+artifacts/chronograph_test/qa/
+artifacts/chronograph_test/*preview*.png
+artifacts/chronograph_test/*verified.png
+artifacts/chronograph_test/*.log
+__pycache__/

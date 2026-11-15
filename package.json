@@ -4,10 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/prepare-chronograph.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/prepare-chronograph.mjs",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test src/engine/engine.test.js && playwright test --config tests/qa.config.js"
+    "test": "node --test src/engine/engine.test.js && playwright test --config tests/qa.config.js",
+    "test:chronograph": "node tests/chronograph-preview.mjs"
   },
   "dependencies": {
     "three": "^0.183.0"
