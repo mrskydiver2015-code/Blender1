@@ -15,5 +15,6 @@
   "web_note": "Procedural dial and basalt baked to 1024px color, roughness and normal maps. Web metals use portable isotropic PBR; anisotropy and procedural micro-brushing remain in the hero source.",
   "position_quantization": 18,
   "normal_quantization": 14,
-  "active_scene_only": true
+  "active_scene_only": true,
+  "stage": "Original static PBR export; superseded for the delivered GLB by movement_rig.json and final_validation.json."
 }

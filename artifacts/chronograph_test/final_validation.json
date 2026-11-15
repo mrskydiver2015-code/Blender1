@@ -3,8 +3,8 @@
     {
       "name": "chronograph_scene.blend",
       "path": "C:/AI-ProjectsH/Blender1/artifacts/chronograph_test/chronograph_scene.blend",
-      "bytes": 9747922,
-      "sha256": "04b271a35e8b69bc248826dee2f419dca97651b93a9ea375be07ddabc1f6f5c8"
+      "bytes": 15088270,
+      "sha256": "9ea2729e51d4db4e0074f0932fb5025d6a2f34698e30ebf1856bc26a986ca6c1"
     },
     {
       "name": "chronograph_hero.png",
@@ -15,8 +15,8 @@
     {
       "name": "chronograph_web.glb",
       "path": "C:/AI-ProjectsH/Blender1/artifacts/chronograph_test/chronograph_web.glb",
-      "bytes": 4731348,
-      "sha256": "8dfe590460aeea8c60687a150f3cb7cfd93c603e56c03b48d34dbcb36bec09f0"
+      "bytes": 4769504,
+      "sha256": "7092b051e3974dd7ede68c822d93ed2f777fea7966b377661a16c4304b3cd284"
     }
   ],
   "png": {
@@ -25,12 +25,12 @@
   },
   "glb": {
     "version": 2,
-    "declaredLength": 4731348,
-    "actualLength": 4731348,
+    "declaredLength": 4769504,
+    "actualLength": 4769504,
     "scenes": 1,
-    "meshes": 11,
+    "meshes": 27,
     "triangles": 357388,
-    "dracoPrimitives": 11,
+    "dracoPrimitives": 27,
     "embeddedImages": 6,
     "externalURIs": 0,
     "extensions": [
@@ -41,9 +41,9 @@
   },
   "browser": {
     "ok": true,
-    "meshes": 11,
+    "meshes": 27,
     "triangles": 357388,
-    "drawCalls": 22,
+    "drawCalls": 54,
     "bounds": [
       0.4150000214576721,
       0.334126815199852,
@@ -58,5 +58,29 @@
     "Node Wrangler",
     "glTF 2.0 + Draco"
   ],
-  "visualReview": "Final Cycles PNG inspected after framing, optical, movement aperture, lighting, and stone polish passes."
+  "visualReview": "Final Cycles PNG inspected after framing, optical, movement aperture, lighting, and stone polish passes. Live viewer desktop and mobile also inspected after AR crystal, framing and movement refinement.",
+  "movementRig": {
+    "movablePivots": [
+      "HourHand",
+      "MinuteHand",
+      "SecondHand",
+      "SmallSecondsHand",
+      "GreatWheel_36T",
+      "Pinion_12T",
+      "IntermediateWheel_20T",
+      "TourbillonCage",
+      "BalanceWheel",
+      "Hairspring"
+    ],
+    "rotationAxis": [
+      0,
+      1,
+      0
+    ],
+    "triangles": 357388,
+    "meshes": 27,
+    "source": "PATRIKS | No. 01 Marine Observatory",
+    "bakedMaterials": "WEB | PATRIKS portable PBR",
+    "draco": true
+  }
 }

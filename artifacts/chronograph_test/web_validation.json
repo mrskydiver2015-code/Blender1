@@ -1,8 +1,8 @@
 {
   "ok": true,
-  "meshes": 11,
+  "meshes": 27,
   "triangles": 357388,
-  "drawCalls": 22,
+  "drawCalls": 54,
   "bounds": [
     0.4150000214576721,
     0.334126815199852,

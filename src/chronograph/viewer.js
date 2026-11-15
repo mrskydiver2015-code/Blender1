@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { bindMovement } from './movement.js';
 import modelUrl from '../../artifacts/chronograph_test/chronograph_web.glb?url';
 import imageUrl from '../../artifacts/chronograph_test/chronograph_hero.png?url';
 import './viewer.css';
@@ -18,6 +19,7 @@ const cameraButtons = [...document.querySelectorAll('[data-camera]')];
 const modeButtons = [...document.querySelectorAll('[data-mode]')];
 const lightingButton = document.querySelector('#lighting');
 const resetButton = document.querySelector('#reset');
+const movementButton = document.querySelector('#movement-toggle');
 const coarse = matchMedia('(pointer: coarse)').matches;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 studioImage.src = imageUrl;
@@ -28,13 +30,19 @@ let ready = false, mode = 'model', warm = false, preset = 'overview';
 let frame = 0, lastFrame = 0, renderedFrames = 0, interacting = false;
 let pressureStart = 0, pressureFrames = 0, pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
 let lostContext = false, disposed = false;
+let movement, moving = !reducedMotion, movementSeconds = 0, glassMaterial;
+const dialCenter = new THREE.Vector3(0, .20187329, .03410295);
 
 // Read-only diagnostics for reproducible QA; never drives the product UI.
 window.chronograph = { get snapshot() {
   return { ready, mode, lighting: warm ? 'gallery' : 'studio', preset, renderedFrames,
     pixelRatio, drawCalls: renderer?.info.render.calls ?? 0,
     camera: camera?.position.toArray(), target: controls?.target.toArray(),
-    distance: controls?.getDistance(), contextLost: lostContext };
+    distance: controls?.getDistance(), minDistance: controls?.minDistance, maxDistance: controls?.maxDistance,
+    dialCenter: dialCenter.toArray(), contextLost: lostContext, moving,
+    movement: movement?.snapshot,
+    glass: glassMaterial && { envMapIntensity: glassMaterial.envMapIntensity, specularIntensity: glassMaterial.specularIntensity,
+      opacity: glassMaterial.opacity, transmission: glassMaterial.transmission } };
 } };
 
 function showError(message) {
@@ -56,9 +64,13 @@ function render(time) {
   const delta = lastFrame ? (time - lastFrame) / 1000 : 1 / 60;
   lastFrame = time;
   const changed = controls.update(delta);
+  if (movement && moving) {
+    movementSeconds += Math.min(delta, .1);
+    movement.update(new Date(), movementSeconds);
+  }
   renderer.render(scene, camera);
   renderedFrames++;
-  if (interacting) {
+  if (interacting || (ready && moving)) {
     pressureFrames++;
     if (!pressureStart) pressureStart = time;
     const elapsed = time - pressureStart;
@@ -72,7 +84,7 @@ function render(time) {
       pressureStart = time; pressureFrames = 0;
     }
   }
-  if (changed) invalidate();
+  if (changed || (ready && moving)) invalidate();
 }
 
 function updateButtons() {
@@ -82,6 +94,11 @@ function updateButtons() {
     button.setAttribute('aria-pressed', String(button.dataset.camera === preset));
   });
   lightingButton.disabled = resetButton.disabled = !ready || mode !== 'model' || lostContext;
+  movementButton.disabled = !ready || mode !== 'model' || lostContext;
+  movementButton.setAttribute('aria-pressed', String(moving));
+  movementButton.setAttribute('aria-label', moving ? 'Pause movement' : 'Play movement');
+  document.querySelector('#movement-icon').textContent = moving ? 'Ⅱ' : '▷';
+  document.querySelector('#movement-label').textContent = moving ? 'Pause' : 'Play';
 }
 
 function setMode(next) {
@@ -108,14 +125,19 @@ function setCamera(next) {
   const fit = Math.max(.334 / 2 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)),
     .46 / 2 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / aspect) * (aspect > 1 ? 1.32 : 1.15);
   const settings = {
-    overview: { target: [0, .17, 0], direction: [.36, .24, .88], distance: fit },
-    dial: { target: [0, .204, .026], direction: [.04, .23, 1], distance: fit * .76 },
-    movement: { target: [0, .153, .032], direction: [.08, .22, 1], distance: fit * .38 },
+    overview: { direction: [.32, .22, .92], distance: fit * 1.08 },
+    dial: { direction: [.02, .23, 1], distance: fit * .78 },
+    movement: { direction: [.04, .23, 1], distance: fit * .43 },
   }[next];
   // Flush remaining damping before applying an exact preset.
   const damping = controls.enableDamping; controls.enableDamping = false; controls.update();
-  controls.target.fromArray(settings.target);
-  camera.position.copy(controls.target).add(new THREE.Vector3(...settings.direction).normalize().multiplyScalar(settings.distance));
+  controls.target.copy(dialCenter);
+  camera.position.copy(dialCenter).add(new THREE.Vector3(...settings.direction).normalize()
+    .multiplyScalar(THREE.MathUtils.clamp(settings.distance, controls.minDistance, controls.maxDistance)));
+  // Optical framing moves the image without changing the physical orbit anchor.
+  const desktop = !matchMedia('(max-width: 700px), (max-width: 1100px) and (pointer: coarse)').matches;
+  camera.setViewOffset(host.clientWidth, host.clientHeight, desktop ? -host.clientWidth * .025 : 0,
+    host.clientHeight * (next === 'overview' ? .09 : next === 'movement' ? .23 : 0), host.clientWidth, host.clientHeight);
   controls.update(); controls.enableDamping = damping;
   viewLabel.textContent = presetLabel(); updateButtons(); invalidate();
 }
@@ -134,10 +156,10 @@ function resize(refit = true) {
 function setLighting() {
   if (!scene) return;
   warm = !warm;
-  scene.environmentIntensity = warm ? .65 : .85;
-  scene.environmentRotation.set(0, warm ? 1.9 : .35, 0);
-  renderer.toneMappingExposure = warm ? .94 : 1.08;
-  scene.getObjectByName('warm-fill').intensity = warm ? 2 : 0;
+  scene.environmentIntensity = warm ? .58 : .72;
+  scene.environmentRotation.set(0, warm ? 1.15 : THREE.MathUtils.degToRad(40), 0);
+  renderer.toneMappingExposure = warm ? .96 : 1.04;
+  scene.getObjectByName('warm-fill').intensity = warm ? 1.25 : 0;
   document.querySelector('#lighting-label').textContent = warm ? 'Gallery' : 'Studio';
   lightingButton.setAttribute('aria-pressed', String(warm));
   lightingButton.setAttribute('aria-label', warm ? 'Switch to cool studio lighting' : 'Switch to warm gallery lighting');
@@ -148,21 +170,26 @@ modeButtons.forEach(button => button.addEventListener('click', () => setMode(but
 cameraButtons.forEach(button => button.addEventListener('click', () => setCamera(button.dataset.camera)));
 resetButton.addEventListener('click', () => setCamera('overview'));
 lightingButton.addEventListener('click', setLighting);
+movementButton.addEventListener('click', () => {
+  moving = !moving; lastFrame = 0;
+  if (moving) movement?.update(new Date(), movementSeconds);
+  updateButtons(); invalidate();
+});
 document.addEventListener('visibilitychange', () => {
   cancelAnimationFrame(frame); frame = 0; lastFrame = 0; invalidate();
 });
 updateButtons();
 
 try {
-  renderer = new THREE.WebGLRenderer({ alpha: true, antialias: !coarse, powerPreference: 'low-power' });
+  renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' });
   renderer.setPixelRatio(pixelRatio);
   renderer.setClearColor(0x10171b, 0);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.08;
+  renderer.toneMappingExposure = 1.04;
   renderer.transmissionResolutionScale = coarse ? .65 : 1;
   renderer.shadowMap.enabled = false;
   renderer.domElement.tabIndex = 0;
-  renderer.domElement.setAttribute('aria-label', '3D chronograph. Drag to rotate, pinch or scroll to zoom. Arrow keys pan. Use camera buttons for preset views.');
+  renderer.domElement.setAttribute('aria-label', 'Live 3D chronograph. Drag to orbit the dial, pinch or scroll to zoom. Use camera buttons for preset views.');
   renderer.domElement.style.touchAction = 'none';
   host.appendChild(renderer.domElement);
   scene = new THREE.Scene();
@@ -170,9 +197,13 @@ try {
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = !reducedMotion;
   controls.dampingFactor = .12;
-  controls.minDistance = .12;
-  controls.maxDistance = 2.6;
-  controls.maxPolarAngle = Math.PI * .87;
+  controls.minDistance = .28;
+  controls.maxDistance = 1.65;
+  controls.minPolarAngle = .50;
+  controls.maxPolarAngle = Math.PI * .49;
+  controls.minAzimuthAngle = -Math.PI * .44;
+  controls.maxAzimuthAngle = Math.PI * .44;
+  controls.enablePan = false;
   controls.screenSpacePanning = true;
   controls.rotateSpeed = .65;
   controls.zoomSpeed = .7;
@@ -190,11 +221,13 @@ try {
   const room = new RoomEnvironment();
   environment = pmrem.fromScene(room, .04);
   scene.environment = environment.texture;
-  scene.environmentIntensity = .85;
-  scene.environmentRotation.y = .35;
+  scene.environmentIntensity = .72;
+  scene.environmentRotation.y = THREE.MathUtils.degToRad(40);
   room.dispose(); pmrem.dispose();
   const fill = new THREE.DirectionalLight(0xffbc76, 0);
-  fill.name = 'warm-fill'; fill.position.set(-.5, .6, 1); scene.add(fill);
+  fill.name = 'warm-fill'; fill.position.set(-.70, .65, .83); fill.target.position.copy(dialCenter); scene.add(fill, fill.target);
+  const key = new THREE.DirectionalLight(0xd6e7ff, .85);
+  key.position.set(.70, .80, .83); key.target.position.copy(dialCenter); scene.add(key, key.target);
   new ResizeObserver(() => resize()).observe(host);
   resize(); setCamera('overview');
   renderer.domElement.addEventListener('webglcontextlost', event => {
@@ -209,19 +242,35 @@ try {
   draco.setWorkerLimit(coarse ? 1 : 2);
   const loader = new GLTFLoader().setDRACOLoader(draco);
   loader.load(modelUrl, gltf => {
-    // Touch devices use a thin transparent optical layer instead of a second
-    // full-scene transmission pass. Geometry and the source GLB stay intact.
-    if (coarse) gltf.scene.traverse(object => {
-      if (object.material?.transmission > 0) {
-        object.material.transmission = 0;
-        object.material.transparent = true;
-        object.material.opacity = .10;
-        object.material.depthWrite = false;
-        object.material.needsUpdate = true;
-      }
-    });
-    scene.add(gltf.scene); ready = true; loading.hidden = true; draco.dispose();
-    updateButtons(); invalidate();
+    try {
+      gltf.scene.traverse(object => {
+        if (/SapphireCrystal/i.test(object.name) || /Sapphire/i.test(object.material?.name || '')) {
+          glassMaterial = object.material;
+          // Thin AR-coated optical preview: no screen-space refraction blur.
+          Object.assign(glassMaterial, { transmission: 0, transparent: true, opacity: .035,
+            envMapIntensity: .36, specularIntensity: .16, roughness: .005,
+            clearcoat: 0, depthWrite: false, thickness: 0, needsUpdate: true });
+        }
+        for (const material of (Array.isArray(object.material) ? object.material : [object.material])) {
+          if (!material) continue;
+          for (const value of Object.values(material)) if (value?.isTexture) {
+            value.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+          }
+        }
+      });
+      scene.add(gltf.scene);
+      gltf.scene.updateMatrixWorld(true);
+      const anchor = gltf.scene.getObjectByName('DialCenter');
+      if (!anchor) throw new Error('Dial anchor is missing');
+      anchor.getWorldPosition(dialCenter);
+      movement = bindMovement(gltf.scene);
+      movement.update(new Date(), movementSeconds);
+      ready = true; loading.hidden = true; draco.dispose();
+      setCamera('overview'); updateButtons(); invalidate();
+    } catch (error) {
+      console.error('Chronograph rig:', error);
+      draco.dispose(); showError('The moving instrument could not initialize. The studio image is available.'); setMode('image');
+    }
   }, progress => {
     loadingLabel.textContent = progress.total
       ? `Loading instrument · ${Math.round(progress.loaded / progress.total * 100)}%`

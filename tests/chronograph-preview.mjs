@@ -30,9 +30,32 @@ try {
     await page.goto(`${base}/chronograph/`);
     await page.waitForFunction(() => window.chronograph?.snapshot.ready, { timeout: 90000 });
     await settle(page);
+    const running = await snapshot(page);
+    assert.equal(running.moving, true);
+    assert.equal(Object.keys(running.movement.pivots).length, 10, 'Ten authored movement pivots load');
+    assert.equal(running.glass.envMapIntensity, .36);
+    assert.ok(running.glass.specularIntensity <= .2 && running.glass.opacity < .05);
+    await page.waitForFunction(previous => window.chronograph.snapshot.movement.clock.second !== previous,
+      running.movement.clock.second, { timeout: 15000 });
+    const later = await snapshot(page);
+    assert.notEqual(later.movement.clock.second, running.movement.clock.second, 'Real-time second hand advances');
+    assert.notDeepEqual(later.movement.pivots.GreatWheel_36T.quaternion, running.movement.pivots.GreatWheel_36T.quaternion);
+    assert.notDeepEqual(later.movement.pivots.TourbillonCage.quaternion, running.movement.pivots.TourbillonCage.quaternion);
+    assert.deepEqual(later.movement.pivots.HourHand.position, running.movement.pivots.HourHand.position, 'Arbor does not drift');
+    await page.getByRole('button', { name: 'Pause movement', exact: true }).click();
+    await settle(page);
+    const frozen = (await snapshot(page)).movement;
+    await page.waitForTimeout(300);
+    assert.deepEqual((await snapshot(page)).movement, frozen, 'Pause freezes every mechanical part');
     assert.equal(await page.locator('canvas').evaluate(el => getComputedStyle(el).touchAction), 'none');
     assert.ok((await snapshot(page)).pixelRatio <= 2);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'No horizontal overflow');
+    assert.deepEqual((await snapshot(page)).target, (await snapshot(page)).dialCenter);
+    if (name === 'desktop') {
+      const title = await page.locator('h1').boundingBox();
+      const stage = await page.locator('.stage').boundingBox();
+      assert.ok(stage.x >= title.x + title.width, 'Canvas stays clear of editorial typography');
+    }
     for (const button of await page.locator('.toolbar button').all()) {
       const box = await button.boundingBox();
       assert.ok(box.height >= 44 && box.width >= 44, 'Thumb-friendly touch targets');
@@ -43,9 +66,11 @@ try {
     await page.getByRole('button', { name: 'Dial', exact: true }).click();
     await settle(page);
     assert.ok((await snapshot(page)).distance < initial.distance);
+    await page.screenshot({ path: `${output}${name}-dial.png` });
     await page.getByRole('button', { name: 'Movement', exact: true }).click();
     await settle(page);
     assert.ok((await snapshot(page)).distance < initial.distance * .6);
+    await page.screenshot({ path: `${output}${name}-movement.png` });
     await page.getByRole('button', { name: 'Reset camera', exact: true }).click();
     await settle(page);
     const canvas = await page.locator('canvas').boundingBox();
@@ -67,7 +92,7 @@ try {
       await touch('touchStart', [[0, x - 35, y], [1, x + 35, y]]);
       for (let i = 1; i <= 6; i++) await touch('touchMove', [[0, x - 35 + i * 4, y + i * 3], [1, x + 35 + i * 4, y + i * 3]]);
       await touch('touchEnd', []); await settle(page);
-      assert.notDeepEqual((await snapshot(page)).target, beforePan.target, 'Two-finger pan changes target');
+      assert.deepEqual((await snapshot(page)).target, beforePan.target, 'Two-finger gestures keep the dial anchor locked');
       assert.equal(await page.evaluate(() => scrollY), 0, 'Touch gestures do not scroll the page');
       await cdp.detach();
     } else {
@@ -79,7 +104,11 @@ try {
       assert.ok((await snapshot(page)).distance < distance);
       const target = (await snapshot(page)).target;
       await page.mouse.down({ button: 'right' });await page.mouse.move(x + 155, y + 50, { steps: 5 });await page.mouse.up({ button: 'right' });await settle(page);
-      assert.notDeepEqual((await snapshot(page)).target, target);
+      assert.deepEqual((await snapshot(page)).target, target, 'Right-drag cannot move the dial anchor');
+      await page.mouse.wheel(0, -10000); await settle(page);
+      assert.ok((await snapshot(page)).distance >= (await snapshot(page)).minDistance - 1e-8, 'Zoom-in clamp protects the crystal');
+      await page.mouse.wheel(0, 10000); await settle(page);
+      assert.ok((await snapshot(page)).distance <= (await snapshot(page)).maxDistance + 1e-8, 'Zoom-out clamp retains the instrument');
     }
     await page.getByRole('button', { name: 'Switch to warm gallery lighting' }).click();
     assert.equal((await snapshot(page)).lighting, 'gallery');
@@ -90,6 +119,10 @@ try {
     const frames = (await snapshot(page)).renderedFrames;
     await page.waitForTimeout(500);
     assert.equal((await snapshot(page)).renderedFrames, frames, 'No idle GPU animation loop');
+    await page.getByRole('button', { name: 'Play movement', exact: true }).click();
+    await settle(page);
+    assert.equal((await snapshot(page)).moving, true);
+    assert.notDeepEqual((await snapshot(page)).movement, frozen, 'Resume resynchronizes clock and animation');
     await page.getByRole('button', { name: /Studio image/ }).click();
     await page.waitForFunction(() => document.querySelector('#studio-image').complete && document.querySelector('#studio-image').naturalWidth === 1920);
     const paused = (await snapshot(page)).renderedFrames;
@@ -100,7 +133,7 @@ try {
     await settle(page);
     assert.ok((await snapshot(page)).renderedFrames > paused);
     assert.deepEqual(errors, []); assert.deepEqual(failures, []);
-    results.push({ name, viewport: options.viewport, gestures: options.hasTouch ? 'orbit / pinch / two-finger pan' : 'orbit / wheel / right-drag pan', idleRenderStopped: true, snapshot: await snapshot(page), errors, failures });
+    results.push({ name, viewport: options.viewport, gestures: options.hasTouch ? 'orbit / pinch / locked target' : 'orbit / wheel / locked target', pausedRenderStopped: true, snapshot: await snapshot(page), errors, failures });
     await context.close();
   }
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -111,6 +144,14 @@ try {
   assert.equal(await page.locator('#studio-image').isVisible(), true);
   results.push({ name: 'asset-failure', studioFallback: true });
   await page.close();
+  const reduced = await browser.newPage({ reducedMotion: 'reduce' });
+  await reduced.goto(`${base}/chronograph/`);
+  await reduced.waitForFunction(() => window.chronograph?.snapshot.ready);
+  assert.equal((await snapshot(reduced)).moving, false, 'Reduced motion starts paused');
+  await reduced.getByRole('button', { name: 'Play movement', exact: true }).click();
+  assert.equal((await snapshot(reduced)).moving, true);
+  results.push({ name: 'reduced-motion', startsPaused: true, playAvailable: true });
+  await reduced.close();
   await writeFile(`${output}responsive-validation.json`, JSON.stringify({ base, browser: 'Edge Chromium (software WebGL)', physicalDeviceFPS: 'Not measured; requires hardware testing', results }, null, 2));
   console.log(JSON.stringify({ passed: true, base, scenarios: results.map(r => r.name), evidence: output }, null, 2));
 } finally {
