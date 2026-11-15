@@ -6,11 +6,19 @@ Aegis Grid is a Vite and Three.js isometric tower defense prototype. Run `npm in
 
 | Role | Exclusive write scope | Responsibility |
 | --- | --- | --- |
-| Architect | `src/engine/` | Fixed-step game loop, A* pathfinding, wave spawner, economy and gameplay state. Keep this layer independent of the DOM and Three.js. |
-| 3D Asset Agent (blender-mcp) | `public/models/` | Produce low-poly GLBs and validate them against `manifest.json`. Keep manifest contract changes coordinated with the integration owner. |
-| QA Agent (playwright-mcp) | `tests/` | Headless WebGL 2 and WebGPU rendering, gameplay, asset swap and frame-rate verification. |
+| Architect / Gameplay Engine | src/engine/ | Fixed-step game loop, A*, waves, economy and state; independent of DOM and Three.js. |
+| 3D Asset Agent | public/models/ | Low-poly GLBs and manifest validation. |
+| QA Agent | tests/ | Chromium gameplay, rendering, asset swap and frame-rate checks. |
 
-The workspace integration owner maintains `src/render/`, the browser entry point, Vite and Playwright configuration, package files, and architecture docs. Agents can read any layer and coordinate interface changes with its owner. Keep `AGENTS.md` and the sibling `Blender1 dok/architecture.md` in sync.
+The integration owner maintains src/render/, browser entry, package/configuration
+and architecture docs. Coordinate contract changes before editing another owner's
+files. Keep this file and ../Blender1 dok/architecture.md in sync.
+This repository is exclusively Aegis Grid. Horology work lives in ../Watches;
+its raw Blender archive is ../Watches dok. Do not add watch code/assets here.
+
+## Windows Playwright rule
+
+For Playwright visual and responsive checks on Windows, use Chromium with mobile device emulation (e.g., iPhone 15 Pro viewport) rather than Windows WebKit (winldd) to avoid unsigned DLL SmartScreen prompts.
 
 ## Runtime contracts
 

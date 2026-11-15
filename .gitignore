@@ -19,11 +19,5 @@ aegis-grid-release.zip
 *.blend[0-9]*
 *.blend@
 
-# Generated decoder copies, previews and local QA evidence.
-public/draco/
-artifacts/chronograph_test/*preview*.png
-artifacts/chronograph_test/*verified.png
-artifacts/chronograph_test/*.log
-artifacts/chronograph_test/qa/
 __pycache__/
 *.pyc
